@@ -5,6 +5,9 @@
  */
 package ws.project.languagebasedlexiconanalisys;
 
+import java.io.IOException;
+import org.apache.lucene.queryparser.classic.ParseException;
+
 /**
  *
  * @author Ulysses_D
@@ -13,8 +16,11 @@ public class LexiconAnalizer {
    
    public static TwitterStreamAnalizer analizer; 
     
-   public static void main(String[] args){
-       analizer = new TwitterStreamAnalizer();
-       analizer.parseStream();
+   public static void main(String[] args) throws IOException, ParseException{
+       //analizer = new TwitterStreamAnalizer();
+       //analizer.parseStream();
+       LexiconIndexer indexer = new LexiconIndexer();
+       //indexer.getDocumentFrequency("stocazzolandia");
+       indexer.calculateSetCover();
    }
 }

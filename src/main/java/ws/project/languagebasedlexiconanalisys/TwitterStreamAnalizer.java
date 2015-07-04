@@ -14,13 +14,15 @@ import java.io.IOException;
  * @author Ulysses_D
  */
 class TwitterStreamAnalizer {
-
-    public TwitterStreamAnalizer() {
     
+    private LexiconIndexer indexer;
+    private long id = 0;
+    
+    public TwitterStreamAnalizer() throws IOException {
+        indexer = new LexiconIndexer();
     }  
 
-    void parseStream() {
-        LexiconIndexer indexer = new LexiconIndexer();
+    void parseStream() throws IOException {
         
         try (BufferedReader br = new BufferedReader(new FileReader("tweets/15giu.txt")))
 	{
@@ -56,19 +58,23 @@ class TwitterStreamAnalizer {
                             {
                                 sw = sw.replaceAll("([^\\p{L}\\p{Nd}]*)(\\w*)([^\\p{L}\\p{Nd}]*)", "$2");
                                 if(sw.matches("\\d+")) continue;
-                                System.out.println(sw);
                                 
+                                indexer.addDocument(id, sw.toLowerCase());  
                             }
                         }
                         else
                         {
                             w = w.replaceAll("([^\\p{L}\\p{Nd}]*)(\\w*)([^\\p{L}\\p{Nd}]*)", "$2");
                             if(w.matches("\\d+")) continue;
-                            System.out.println(w);
+                            
+                            indexer.addDocument(id, w.toLowerCase());
                         }
                     }
                 }
+                id++;
             }
+            
+            indexer.close();
         }
         catch (IOException e)
         {
