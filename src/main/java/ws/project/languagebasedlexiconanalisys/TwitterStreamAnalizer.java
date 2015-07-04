@@ -44,15 +44,28 @@ class TwitterStreamAnalizer {
                     {
                         //Rimuoviamo parole tipo "@qualcosa", "#qualcosa", "http(s)://", caratteri speciali (è?), "RT";
                         if(w.matches("\\W*@.*")) continue;
-                        if(w.matches("\\W*#.*")) continue;
+                        //if(w.matches("\\W*#.*")) continue;
                         if(w.matches("\\W*http(s)?\\://.*")) continue;
-                        if(w.matches("\\W*")) continue;
-                        if(w.matches("RT")) continue;
+                        if(w.matches("[^\\p{L}\\p{Nd}]*")) continue;
+                        if(w.matches("(R|r)(T|t)")) continue;
                         
-                        w = w.replaceAll("(\\w+)(\\W+)(\\w+)", "$1 $3");
-                        w = w.replaceAll("(\\W*)(\\w*)(\\W*)", "$2");
-                        System.out.println(w);
-                        
+                        if(w.matches("(\\w+)([^\\p{L}\\p{Nd}]+)(\\w+)([^\\p{L}\\p{Nd}]*)"))
+                        {
+                            String[] temp = w.replaceAll("(\\w+)([^\\p{L}\\p{Nd}]+)(\\w+)([^\\p{L}\\p{Nd}]*)", "$1 $3").split(" ");
+                            for( String sw: temp)
+                            {
+                                sw = sw.replaceAll("([^\\p{L}\\p{Nd}]*)(\\w*)([^\\p{L}\\p{Nd}]*)", "$2");
+                                if(sw.matches("\\d+")) continue;
+                                System.out.println(sw);
+                                
+                            }
+                        }
+                        else
+                        {
+                            w = w.replaceAll("([^\\p{L}\\p{Nd}]*)(\\w*)([^\\p{L}\\p{Nd}]*)", "$2");
+                            if(w.matches("\\d+")) continue;
+                            System.out.println(w);
+                        }
                     }
                 }
             }
