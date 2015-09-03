@@ -5,6 +5,7 @@
  */
 package ws.project.languagebasedlexiconanalisys;
 
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -17,19 +18,25 @@ class TwitterStreamAnalizer {
     
     private LexiconIndexer indexer;
     private long id = 0;
+    private int start = 25;
+    private int tot_count = 0;
+    private int it_count = 0;
     
     public TwitterStreamAnalizer() throws IOException {
         indexer = new LexiconIndexer();
+        indexer.openListWriter();
     }  
 
     void parseStream() throws IOException {
         
-        try (BufferedReader br = new BufferedReader(new FileReader("tweets/15giu.txt")))
+        try (BufferedReader br = new BufferedReader(new FileReader("tweets/22giu.txt")))
 	{
             String currentLine;
             
             while ((currentLine = br.readLine()) != null)
             {
+                
+                if(!currentLine.matches("\\d+\\:\\d+\\:\\d+.*")) continue;
 		String[] parts = currentLine.split(" \\: ", 2);
                 if(parts.length == 1) continue;
                 String[] infos = parts[0].split(", ");
@@ -37,8 +44,26 @@ class TwitterStreamAnalizer {
                 //System.out.println(infos.length);
                 if(infos.length != 1)
                 {
-                    if(!"it".equals(infos[1])) continue;
+                    tot_count++;
+                    //System.out.println(infos[0]);
+                    String[] time = infos[0].split(":");
+                    if(start == 25)
+                    {
+                        start = Integer.parseInt(time[0]);
+                        indexer.addIndex(time[0]);
+                        System.out.println("Start: " + start);
+                        indexer.openWriter(time[0]);
+                    }
                     
+                    if(Integer.parseInt(time[0]) > start)
+                    {
+                        System.out.println("Hour " + start + ", Total Tweets: " + tot_count + ", Tweets in Italian: " + it_count);
+                        start = 25;
+                        tot_count = it_count = 0;
+                        indexer.closeWriter();
+                    }
+                    if(!"it".equals(infos[1])) continue;
+                    it_count++;
                     //Il tweet è in "Itagliano"
                     System.out.println(parts[1]);
                     String[] words = parts[1].split(" ");
@@ -58,7 +83,7 @@ class TwitterStreamAnalizer {
                             {
                                 sw = sw.replaceAll("([^\\p{L}\\p{Nd}]*)(\\w*)([^\\p{L}\\p{Nd}]*)", "$2");
                                 if(sw.matches("\\d+")) continue;
-                                
+                                if(sw.matches("")) continue;
                                 indexer.addDocument(id, sw.toLowerCase());  
                             }
                         }
@@ -66,15 +91,17 @@ class TwitterStreamAnalizer {
                         {
                             w = w.replaceAll("([^\\p{L}\\p{Nd}]*)(\\w*)([^\\p{L}\\p{Nd}]*)", "$2");
                             if(w.matches("\\d+")) continue;
-                            
+                            if(w.matches("")) continue;
                             indexer.addDocument(id, w.toLowerCase());
                         }
                     }
                 }
                 id++;
             }
-            
-            indexer.close();
+            indexer.closeListWriter();
+            indexer.closeWriter();
+            System.out.println("Hour " + start + ", Total Tweets: " + tot_count + ", Tweets in Italian: " + it_count);
+                        
         }
         catch (IOException e)
         {
