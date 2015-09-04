@@ -16,11 +16,12 @@ public class LexiconAnalizer {
    
     public static TwitterStreamAnalizer analizer; 
     
-    public static void main(String[] args) throws IOException{
-        analizer = new TwitterStreamAnalizer();
-        analizer.parseStream();
+    public static void main(String[] args) throws IOException, ParseException{
+        //analizer = new TwitterStreamAnalizer();
+       //analizer.parseStream();
         //LexiconIndexer indexer = new LexiconIndexer();
-       
+        LexiconProcessor processor = new LexiconProcessor();
+        processor.calculateSetCover();
         //indexer.calculateSetCover();
    }
 }

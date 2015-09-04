@@ -59,11 +59,13 @@ class TwitterStreamAnalizer {
                     {
                         System.out.println("Hour " + start + ", Total Tweets: " + tot_count + ", Tweets in Italian: " + it_count);
                         start = 25;
+                        indexer.saveT(it_count);
                         tot_count = it_count = 0;
                         indexer.closeWriter();
                     }
                     if(!"it".equals(infos[1])) continue;
                     it_count++;
+                    
                     //Il tweet è in "Itagliano"
                     System.out.println(parts[1]);
                     String[] words = parts[1].split(" ");
@@ -98,6 +100,7 @@ class TwitterStreamAnalizer {
                 }
                 id++;
             }
+            indexer.saveT(it_count);
             indexer.closeListWriter();
             indexer.closeWriter();
             System.out.println("Hour " + start + ", Total Tweets: " + tot_count + ", Tweets in Italian: " + it_count);
