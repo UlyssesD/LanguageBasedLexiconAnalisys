@@ -59,7 +59,8 @@ class TwitterStreamAnalizer {
                     {
                         System.out.println("Hour " + start + ", Total Tweets: " + tot_count + ", Tweets in Italian: " + it_count);
                         start = 25;
-                        indexer.saveT(it_count);
+                        indexer.saveTi(it_count);
+                        indexer.saveTw(tot_count);
                         tot_count = it_count = 0;
                         indexer.closeWriter();
                     }
@@ -100,7 +101,8 @@ class TwitterStreamAnalizer {
                 }
                 id++;
             }
-            indexer.saveT(it_count);
+            indexer.saveTi(it_count);
+            indexer.saveTw(tot_count);
             indexer.closeListWriter();
             indexer.closeWriter();
             System.out.println("Hour " + start + ", Total Tweets: " + tot_count + ", Tweets in Italian: " + it_count);

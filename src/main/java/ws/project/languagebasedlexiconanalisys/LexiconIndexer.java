@@ -106,14 +106,24 @@ class LexiconIndexer {
         System.out.println("Added " + term + " to index");
     }
     
-    public void saveT(long t) throws IOException
+    public void saveTi(long t) throws IOException
     {
         Document doc = new Document();
-        doc.add(new StringField("term", "_T", Field.Store.YES));
+        doc.add(new StringField("term", "_Ti", Field.Store.YES));
         doc.add(new LongField("ID", t, Field.Store.YES));
         writer.addDocument(doc);
         writer.commit();
     }
+    
+    public void saveTw(long t) throws IOException
+    {
+        Document doc = new Document();
+        doc.add(new StringField("term", "_Tw", Field.Store.YES));
+        doc.add(new LongField("ID", t, Field.Store.YES));
+        writer.addDocument(doc);
+        writer.commit();
+    }
+    
     
     public void openListWriter() throws IOException
     {
@@ -147,11 +157,11 @@ class LexiconIndexer {
         System.out.println("docFreq for term " + s + ": " +  reader.docFreq(new Term("term", s)));
     }
     
-    public int getT() throws IOException
+    public float getTi() throws IOException
     {
         IndexSearcher searcher = new IndexSearcher(reader);
         
-        Query q = new TermQuery(new Term("term", "_T"));
+        Query q = new TermQuery(new Term("term", "_Ti"));
         
         TopDocs top = searcher.search(q, 1);
         ScoreDoc[] hits = top.scoreDocs;
@@ -159,7 +169,23 @@ class LexiconIndexer {
             
         System.out.println(doc.get("ID"));
         
-        return Integer.parseInt(doc.get("ID"));
+        return Float.parseFloat(doc.get("ID"));
+        
+    }
+    
+    public float getTw() throws IOException
+    {
+        IndexSearcher searcher = new IndexSearcher(reader);
+        
+        Query q = new TermQuery(new Term("term", "_Tw"));
+        
+        TopDocs top = searcher.search(q, 1);
+        ScoreDoc[] hits = top.scoreDocs;
+        Document doc = searcher.doc(hits[0].doc);
+            
+        System.out.println(doc.get("ID"));
+        
+        return Float.parseFloat(doc.get("ID"));
         
     }
     
@@ -170,16 +196,19 @@ class LexiconIndexer {
         ValueComparator comp = new ValueComparator(terms);
         TreeMap<String,HashSet<String>> sorted = new TreeMap(comp);
         
-        int count = getT();
+        float it_count = getTi(), tot_count = getTw();
+        float ratio = it_count / tot_count;
+        
         Document doc = null;
         
         for(int i = 0; i < reader.maxDoc(); i++){
             doc = reader.document(i);
             String t = doc.get("term"), id = doc.get("ID");
-            int f = reader.docFreq(new Term("term", t));
+            float f = reader.docFreq(new Term("term", t));
             
-            if(t.equals("_T")) continue;
-            if(f >= count)
+            if(t.equals("_Ti") || t.equals("_Tw")) continue;
+            
+            if((f / ratio) >= tot_count)
             {
                 System.out.println("Removing " + t + " from cover");
                 continue;

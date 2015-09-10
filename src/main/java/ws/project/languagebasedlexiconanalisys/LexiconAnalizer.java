@@ -18,10 +18,9 @@ public class LexiconAnalizer {
     
     public static void main(String[] args) throws IOException, ParseException{
         //analizer = new TwitterStreamAnalizer();
-       //analizer.parseStream();
-        //LexiconIndexer indexer = new LexiconIndexer();
+        //analizer.parseStream();
+        
         LexiconProcessor processor = new LexiconProcessor();
         processor.calculateSetCover();
-        //indexer.calculateSetCover();
    }
 }

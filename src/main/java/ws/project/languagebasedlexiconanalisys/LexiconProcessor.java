@@ -22,7 +22,7 @@ public class LexiconProcessor {
     
     public void calculateSetCover() throws IOException, ParseException
     {
-        indexer.openReader("15");
+        indexer.openReader("17");
         indexer.calculateSetCover();
     }
 }
