@@ -21,6 +21,7 @@ public class LexiconAnalizer {
         //analizer.parseStream();
         
         LexiconProcessor processor = new LexiconProcessor();
-        processor.calculateSetCover();
+        //processor.calculateSetCover();
+        processor.calculateTermFreq();
    }
 }

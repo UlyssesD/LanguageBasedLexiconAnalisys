@@ -25,4 +25,11 @@ public class LexiconProcessor {
         indexer.openReader("17");
         indexer.calculateSetCover();
     }
+    
+    
+     public void calculateTermFreq() throws IOException, ParseException
+    {
+        indexer.openReader("17");
+        indexer.calculateTermFreq();
+    }
 }

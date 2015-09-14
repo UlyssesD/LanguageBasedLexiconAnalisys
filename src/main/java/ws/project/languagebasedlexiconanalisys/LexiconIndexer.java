@@ -25,6 +25,8 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.Terms;
+import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
@@ -35,6 +37,7 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.SimpleFSDirectory;
+import org.apache.lucene.util.BytesRef;
 import static org.apache.lucene.util.Version.LUCENE_41;
 
 /**
@@ -188,6 +191,52 @@ class LexiconIndexer {
         return Float.parseFloat(doc.get("ID"));
         
     }
+    
+    void calculateTermFreq() throws IOException{
+        
+       //for(int i = 0; i < reader.maxDoc(); i++){
+            IndexSearcher searcher = new IndexSearcher(reader);
+        
+            Query q = new TermQuery(new Term("term","da"));
+        
+            TopDocs top = searcher.search(q,1);
+            ScoreDoc[] hits = top.scoreDocs;
+            int docid = hits[0].doc;    
+            System.out.println(docid);
+            Terms termVector = reader.getTermVector(docid, "term");
+            System.out.println(termVector.size());
+            /*if(termVector!=null)
+                System.out.println(termVector.toString());
+            else
+                System.out.println("fuck");*/
+            /*TermsEnum itr = termVector.iterator(null);   
+            BytesRef term = null;
+
+            while ((term = itr.next()) != null) {              
+                String termText = term.utf8ToString();
+                Term termInstance = new Term("term", term);                              
+                long termFreq = reader.totalTermFreq(termInstance);
+                long docCount = reader.docFreq(termInstance);
+
+                System.out.println("term: "+termText+", termFreq = "+termFreq+", docCount = "+docCount);
+
+        
+             }     */       
+       //}
+
+    }
+    
+    
+    /*public int getDocNum(int docNo) throws IOException{
+        IndexSearcher searcher = new IndexSearcher(reader);
+        
+        Query q = new TermQuery(new Term("term"));
+        
+        TopDocs top = searcher.search(q, 1);
+        ScoreDoc[] hits = top.scoreDocs;
+        return hits[docNo].doc;
+    }*/
+    
     
     void calculateSetCover() throws IOException
     {
