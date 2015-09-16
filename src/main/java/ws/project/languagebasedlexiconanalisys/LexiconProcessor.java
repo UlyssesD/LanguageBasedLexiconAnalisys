@@ -22,14 +22,15 @@ public class LexiconProcessor {
     
     public void calculateSetCover() throws IOException, ParseException
     {
-        indexer.openReader("17");
+        indexer.openReader("13");
         indexer.calculateSetCover();
     }
     
-    
-     public void calculateTermFreq() throws IOException, ParseException
+     public void printTweets() throws IOException, ParseException
     {
-        indexer.openReader("17");
-        indexer.calculateTermFreq();
+        indexer.openReader("13");
+        indexer.printTweets();
     }
+    
+   
 }

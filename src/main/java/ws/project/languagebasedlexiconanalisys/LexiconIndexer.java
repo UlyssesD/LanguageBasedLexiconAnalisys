@@ -15,15 +15,19 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.SimpleAnalyzer;
+import org.apache.lucene.analysis.it.ItalianAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.LongField;
 import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.MultiFields;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
@@ -39,6 +43,7 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.SimpleFSDirectory;
 import org.apache.lucene.util.BytesRef;
 import static org.apache.lucene.util.Version.LUCENE_41;
+import static org.apache.lucene.util.Version.LUCENE_44;
 
 /**
  *
@@ -98,7 +103,7 @@ class LexiconIndexer {
         listWriter.commit();
     }
     
-    public void addDocument(long id, String term) throws IOException
+    /*public void addDocument(long id, String term) throws IOException
     {
         Document doc = new Document();
         doc.add(new StringField("term", term, Field.Store.YES));
@@ -107,6 +112,31 @@ class LexiconIndexer {
         writer.commit();
         
         System.out.println("Added " + term + " to index");
+    }*/
+    
+     public void addTweet(long id, String tweet) throws IOException
+    {
+        Document doc = new Document();
+        doc.add(new TextField("tweet", tweet, Field.Store.YES));
+        doc.add(new LongField("ID", id, Field.Store.YES));
+        writer.addDocument(doc);
+        writer.commit();
+        
+        System.out.println("Added " + tweet + " to index");
+    }
+     
+    public void printTweets() throws IOException{
+        /*Document doc = null;
+        for(int i = 0; i < reader.maxDoc(); i++){
+            doc = reader.document(i);
+            System.out.println(doc.getField("tweet"));
+            //System.out.println(doc.getField("tweet").tokenStream(analyzer));
+        }*/
+        Terms terms = MultiFields.getTerms(reader,"tweet");
+        TermsEnum termsEnum = terms.iterator(null);
+        while (termsEnum.next()!=null){
+            System.out.println(termsEnum.term().utf8ToString() + ", df: " + termsEnum.docFreq());
+        }
     }
     
     public void saveTi(long t) throws IOException
@@ -130,8 +160,8 @@ class LexiconIndexer {
     
     public void openListWriter() throws IOException
     {
-        analyzer = new StandardAnalyzer(LUCENE_41);
-        cfg = new IndexWriterConfig(LUCENE_41, analyzer);
+        analyzer = new SimpleAnalyzer(LUCENE_44);
+        cfg = new IndexWriterConfig(LUCENE_44, analyzer);
         listWriter = new IndexWriter(list,cfg);
     }
     
@@ -145,8 +175,9 @@ class LexiconIndexer {
         File f = new File(index);
         dir = FSDirectory.open(f);
         
-        analyzer = new StandardAnalyzer(LUCENE_41);
-        cfg = new IndexWriterConfig(LUCENE_41, analyzer);
+        analyzer = new ItalianAnalyzer(LUCENE_44);
+        System.out.println(ItalianAnalyzer.getDefaultStopSet());
+        cfg = new IndexWriterConfig(LUCENE_44, analyzer);
         writer = new IndexWriter(dir,cfg);
     }
     
@@ -192,52 +223,7 @@ class LexiconIndexer {
         
     }
     
-    void calculateTermFreq() throws IOException{
-        
-       //for(int i = 0; i < reader.maxDoc(); i++){
-            IndexSearcher searcher = new IndexSearcher(reader);
-        
-            Query q = new TermQuery(new Term("term","da"));
-        
-            TopDocs top = searcher.search(q,1);
-            ScoreDoc[] hits = top.scoreDocs;
-            int docid = hits[0].doc;    
-            System.out.println(docid);
-            Terms termVector = reader.getTermVector(docid, "term");
-            System.out.println(termVector.size());
-            /*if(termVector!=null)
-                System.out.println(termVector.toString());
-            else
-                System.out.println("fuck");*/
-            /*TermsEnum itr = termVector.iterator(null);   
-            BytesRef term = null;
 
-            while ((term = itr.next()) != null) {              
-                String termText = term.utf8ToString();
-                Term termInstance = new Term("term", term);                              
-                long termFreq = reader.totalTermFreq(termInstance);
-                long docCount = reader.docFreq(termInstance);
-
-                System.out.println("term: "+termText+", termFreq = "+termFreq+", docCount = "+docCount);
-
-        
-             }     */       
-       //}
-
-    }
-    
-    
-    /*public int getDocNum(int docNo) throws IOException{
-        IndexSearcher searcher = new IndexSearcher(reader);
-        
-        Query q = new TermQuery(new Term("term"));
-        
-        TopDocs top = searcher.search(q, 1);
-        ScoreDoc[] hits = top.scoreDocs;
-        return hits[docNo].doc;
-    }*/
-    
-    
     void calculateSetCover() throws IOException
     {
         HashSet min_cover = new HashSet(), covered = new HashSet(), universe = new HashSet();
