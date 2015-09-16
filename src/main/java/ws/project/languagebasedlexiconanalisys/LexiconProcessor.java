@@ -22,14 +22,22 @@ public class LexiconProcessor {
     
     public void calculateSetCover() throws IOException, ParseException
     {
-        indexer.openReader("17");
-        indexer.calculateSetCover();
+        for(int i = 0; i < indexer.getListReader().maxDoc(); i++)
+        {
+            String idx = indexer.getListReader().document(i).get("index");
+            indexer.openReader(idx);
+            System.out.println("Calculating Set Cover for hour " + idx + ":00");
+            indexer.calculateSetCover(idx);
+            indexer.closeReader();
+        }
+        
     }
     
     
      public void calculateTermFreq() throws IOException, ParseException
     {
-        indexer.openReader("17");
+        indexer.openReader("16");
         indexer.calculateTermFreq();
+        indexer.calculateSetCover("16");
     }
 }

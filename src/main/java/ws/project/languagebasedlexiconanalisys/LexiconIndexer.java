@@ -7,6 +7,8 @@ package ws.project.languagebasedlexiconanalisys;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,9 +20,12 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FloatField;
 import org.apache.lucene.document.LongField;
 import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.Fields;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -38,6 +43,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.SimpleFSDirectory;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.NumericUtils;
 import static org.apache.lucene.util.Version.LUCENE_41;
 
 /**
@@ -49,6 +55,14 @@ class LexiconIndexer {
     private Analyzer analyzer;
     private IndexWriterConfig cfg;
     private IndexWriter writer, listWriter;
+
+    public IndexReader getReader() {
+        return reader;
+    }
+
+    public IndexReader getListReader() {
+        return listReader;
+    }
     private IndexReader reader, listReader;
     
     public LexiconIndexer() throws IOException {
@@ -98,31 +112,32 @@ class LexiconIndexer {
         listWriter.commit();
     }
     
-    public void addDocument(long id, String term) throws IOException
+    public void addDocument(long id, String term, String text) throws IOException
     {
         Document doc = new Document();
         doc.add(new StringField("term", term, Field.Store.YES));
         doc.add(new LongField("ID", id, Field.Store.YES));
+        doc.add(new TextField("tweet", text, Field.Store.YES));
         writer.addDocument(doc);
         writer.commit();
         
-        System.out.println("Added " + term + " to index");
+        //System.out.println("Added " + term + " to index");
     }
     
-    public void saveTi(long t) throws IOException
+    public void saveTi(float t) throws IOException
     {
         Document doc = new Document();
         doc.add(new StringField("term", "_Ti", Field.Store.YES));
-        doc.add(new LongField("ID", t, Field.Store.YES));
+        doc.add(new FloatField("ID", t, Field.Store.YES));
         writer.addDocument(doc);
         writer.commit();
     }
     
-    public void saveTw(long t) throws IOException
+    public void saveTw(float t) throws IOException
     {
         Document doc = new Document();
         doc.add(new StringField("term", "_Tw", Field.Store.YES));
-        doc.add(new LongField("ID", t, Field.Store.YES));
+        doc.add(new FloatField("ID", t, Field.Store.YES));
         writer.addDocument(doc);
         writer.commit();
     }
@@ -196,22 +211,35 @@ class LexiconIndexer {
         
        //for(int i = 0; i < reader.maxDoc(); i++){
             IndexSearcher searcher = new IndexSearcher(reader);
+            Query q = new TermQuery(new Term("term","e"));
         
-            Query q = new TermQuery(new Term("term","da"));
-        
-            TopDocs top = searcher.search(q,1);
+            TopDocs top = searcher.search(q,reader.numDocs());
             ScoreDoc[] hits = top.scoreDocs;
+            System.out.println(hits.length);
+            /*
             int docid = hits[0].doc;    
             System.out.println(docid);
-            Terms termVector = reader.getTermVector(docid, "term");
+            Terms termVector = reader.getTermVector(docid, "tweet");
             System.out.println(termVector.size());
+            */
+            
+            Document doc = null;
+        
+            System.out.println("Results for query: " + q.toString());
+            for(ScoreDoc entry: hits){
+                doc = searcher.doc(entry.doc);
+            
+                System.out.println("doc: " + entry.doc + ", ID: " + doc.get("ID") + " -> " + doc.get("tweet"));
+            }
+            
             /*if(termVector!=null)
                 System.out.println(termVector.toString());
             else
                 System.out.println("fuck");*/
-            /*TermsEnum itr = termVector.iterator(null);   
-            BytesRef term = null;
+            //TermsEnum itr = termVector.iterator(null);
+            //BytesRef term = null;
 
+            /*
             while ((term = itr.next()) != null) {              
                 String termText = term.utf8ToString();
                 Term termInstance = new Term("term", term);                              
@@ -219,9 +247,8 @@ class LexiconIndexer {
                 long docCount = reader.docFreq(termInstance);
 
                 System.out.println("term: "+termText+", termFreq = "+termFreq+", docCount = "+docCount);
-
-        
-             }     */       
+            }
+            */
        //}
 
     }
@@ -238,7 +265,7 @@ class LexiconIndexer {
     }*/
     
     
-    void calculateSetCover() throws IOException
+    void calculateSetCover(String index) throws IOException
     {
         HashSet min_cover = new HashSet(), covered = new HashSet(), universe = new HashSet();
         Map<String, HashSet<String>> terms = new HashMap();
@@ -246,7 +273,6 @@ class LexiconIndexer {
         TreeMap<String,HashSet<String>> sorted = new TreeMap(comp);
         
         float it_count = getTi(), tot_count = getTw();
-        float ratio = it_count / tot_count;
         
         Document doc = null;
         
@@ -255,13 +281,23 @@ class LexiconIndexer {
             String t = doc.get("term"), id = doc.get("ID");
             float f = reader.docFreq(new Term("term", t));
             
+            //System.out.println("Ti/Tw = " + ratio + ", df/Ti = " + it_ratio + ", r = " + r);
+            if(t.equals("e"))System.err.println("term: " + t + ", t_d: " + f + ", T: " + tot_count);
+        
+            
+            
             if(t.equals("_Ti") || t.equals("_Tw")) continue;
             
-            if((f / ratio) >= tot_count)
+            float treshold = (float) ((Math.pow(f, 2) * Math.pow(10, 4)) / (Math.pow(tot_count, 2)));
+            //System.out.println("Treshold = " + treshold);
+            
+            
+            if(treshold >= 1)
             {
                 System.out.println("Removing " + t + " from cover");
                 continue;
             }
+            
             if(terms.containsKey(t)) terms.get(t).add(id);
             else
             {
@@ -338,6 +374,12 @@ class LexiconIndexer {
             }
         
         System.out.println("Quality: " + overlapping.size() + "/" + mc.length);
+        
+        PrintWriter writer = new PrintWriter(new File(index + ".txt"), "UTF-8");
+        Arrays.sort(mc);
+        for (int i = 0; i < mc.length; i++)
+            writer.write(mc[i] + ";");
+        writer.close();
     }
     
 }
