@@ -28,7 +28,7 @@ public class LexiconProcessor {
     
      public void printTweets() throws IOException, ParseException
     {
-        indexer.openReader("13");
+        indexer.openReader("17-09-2015");
         indexer.printTweets();
     }
     
