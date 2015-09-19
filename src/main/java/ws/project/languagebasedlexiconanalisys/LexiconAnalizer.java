@@ -20,6 +20,7 @@ public class LexiconAnalizer {
     public static void main(String[] args) throws IOException, ParseException, JSONException, org.json.simple.parser.ParseException{
         //analizer = new TwitterStreamAnalizer();
         //analizer.parseStream();
+       
         
         LexiconProcessor processor = new LexiconProcessor();
 
